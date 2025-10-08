@@ -1,36 +1,46 @@
 "use client";
-import { signIn, useSession } from "next-auth/react";
-import React, { useEffect, useState } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Menu, Sparkles, X } from "lucide-react";
+import { Menu, Sparkles, X, LogOut } from "lucide-react";
 import { Button } from "../ui/button";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            setIsDropdownOpen(false);
+        }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+        window.removeEventListener("scroll", handleScroll);
+        document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
-      setIsMobileMenuOpen(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (session?.user) {
-      scrollToSection("editor");
-    } else {
-      await signIn("google");
+      
+      // We add a small delay before closing the mobile menu.
+      // This gives the browser time to start the scroll animation.
+      setTimeout(() => {
+        setIsMobileMenuOpen(false);
+      }, 300); // 300 milliseconds delay
     }
   };
 
@@ -46,7 +56,6 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <motion.div
             className="flex items-center space-x-2 cursor-pointer"
             whileHover={{ scale: 1.05 }}
@@ -64,7 +73,6 @@ const Navbar = () => {
             </span>
           </motion.div>
 
-          {/* Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <button
               onClick={() => scrollToSection("features")}
@@ -78,16 +86,44 @@ const Navbar = () => {
             >
               Pricing
             </button>
-            <Button
-              variant="hero"
-              className="w-full font-semibold"
-              onClick={handleSubmit}
-            >
-              {session?.user ? "Launch App" : "Sign In"}
-            </Button>
+            {status === 'loading' ? (
+                <div className="w-10 h-10 bg-muted rounded-full animate-pulse" />
+            ) : session?.user ? (
+                <div className="relative" ref={dropdownRef}>
+                    <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+                        <img src={session.user.image!} alt="User Avatar" className="w-10 h-10 rounded-full border-2 border-primary/50 hover:border-primary transition-colors" />
+                    </button>
+                    {isDropdownOpen && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="absolute right-0 mt-2 w-48 glass rounded-xl border border-card-border shadow-lg py-2"
+                        >
+                            <div className="px-4 py-2 border-b border-card-border">
+                                <p className="text-sm font-medium text-foreground truncate">{session.user.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>
+                            </div>
+                            <button 
+                                onClick={() => signOut()} 
+                                className="flex items-center w-full text-left px-4 py-2 text-sm text-foreground hover:bg-primary/10"
+                            >
+                                <LogOut className="h-4 w-4 mr-2" />
+                                Sign Out
+                            </button>
+                        </motion.div>
+                    )}
+                </div>
+            ) : (
+                <Button
+                    variant="hero"
+                    className="font-semibold"
+                    onClick={() => signIn("google")}
+                >
+                    Sign In
+                </Button>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden text-foreground"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -121,9 +157,15 @@ const Navbar = () => {
             >
               Pricing
             </button>
-            <Button variant="hero" className="w-full" onClick={handleSubmit}>
-              {session?.user ? "Launch App" : "Sign In"}
-            </Button>
+            {session?.user ? (
+                 <Button variant="outline" className="w-full" onClick={() => signOut()}>
+                    Sign Out
+                 </Button>
+            ) : (
+                <Button variant="hero" className="w-full" onClick={() => signIn('google')}>
+                    Sign In
+                </Button>
+            )}
           </div>
         </motion.div>
       </div>
