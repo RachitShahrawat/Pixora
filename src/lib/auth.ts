@@ -96,3 +96,5 @@ export const authOptions: NextAuthOptions = {
     signIn: "/",
   },
 };
+
+// sign in not working
