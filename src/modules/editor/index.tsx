@@ -114,7 +114,7 @@ const Editor = () => {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             
             Welcome back, {session?.user?.name}! Upload your photo and see the magic happen.
-            {/* --- MODIFICATION END --- */}
+            
           </p>
         </motion.div>
 
