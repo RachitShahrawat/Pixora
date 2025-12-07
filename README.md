@@ -26,6 +26,3 @@ Pixora is a full-stack, subscription-based AI photo editing platform. It allows 
 * **AI/Image Service:** [ImageKit](https://imagekit.io/)
 * **Styling:** Tailwind CSS + Shadcn UI
 * **State/Validation:** React Hook Form + Zod
-NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT="[https://ik.imagekit.io/your_id](https://ik.imagekit.io/your_id)"
-NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY="public_..."
-IMAGEKIT_PRIVATE_KEY="private_..."
